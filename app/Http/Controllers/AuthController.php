@@ -98,16 +98,23 @@ class AuthController extends Controller
             $daysproduction = DB::select('Select sum(amount) as sum from Production where production_date="'.date('Y-m-d').'"');
             $herd=Cow::all()->count();
             $users=User::all()->count();
-            $productiondates=collect(DB::select('SELECT distinct(production_date) FROM Production'));
+           /* $productiondates=collect(DB::select('SELECT distinct(production_date) FROM Production'));
             $productiondates->all();
             $productionlist=collect(DB::select('SELECT tag,sum(amount) AS amount FROM Production GROUP BY tag,production_date ORDER By tag'));
             $productionlist=$productionlist->groupby('tag');
             $productionlist->all();
+            //$dates = $this->generateDates($start, $end); // you fill zero valued dates
+           // $labels=$productionlist->keys();
+            //dd($labels,);
+            $dates = $this->generateDates($start, $end); // you fill zero valued dates
             $dates = $this->generateDates($start, $end); // you fill zero valued dates
 
-            //$productiondates->merge($dates);
+            $productiondates->merge($dates);
             $labels=$productiondates;
             $productionvalues=$productionlist->values();
+           // dd($productionvalues);
+            */
+            return view('dashboard'); //,compact('production','daysproduction','production_time','herd','users','labels','productionvalues'));
             //dd(json_stringify($productiondates));
             return view('dashboard',compact('production','daysproduction','production_time','herd','users','labels','productionvalues'));
         }
@@ -120,8 +127,11 @@ class AuthController extends Controller
     $startDate = $startDate->copy();
 
     for ($date = $startDate; $date->lte($endDate); $date->addDay()) {
+        $dates->put($date->format($format), 1);
+        //$production=collect(DB::select('SELECT distinct tag FROM Production'));
         $dates->put($date->format($format), 0);
     }
+       
 
     return $dates;
 }
