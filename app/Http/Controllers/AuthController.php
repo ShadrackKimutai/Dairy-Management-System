@@ -91,36 +91,46 @@ class AuthController extends Controller
         
         if(Auth::check()){
             $start = Carbon::today()->subDays(7);
+
             $end = Carbon::yesterday();
             $production=DB::select('Select sum(amount) as sum from Production where production_date="'.date('Y-m-d').'" AND production_period="'.$production_time.'"');
             $daysproduction = DB::select('Select sum(amount) as sum from Production where production_date="'.date('Y-m-d').'"');
-            $herd=Cow::all()->count();
+            $herdsize=Cow::all()->count();
+            $herd =Cow::all();
             $users=User::all()->count();
-            $productiondates=collect(DB::select('SELECT distinct(production_date) FROM Production'));
-            $productiondates->all();
+            $productionTime=['Morning','Afternoon','Evening'];
             $productionlist=collect(DB::select('SELECT tag,sum(amount) AS amount FROM Production GROUP BY tag,production_date ORDER By tag'));
             $productionlist=$productionlist->groupby('tag');
             $productionlist->all();
             $dates = $this->generateDates($start, $end); // you fill zero valued dates
-            $labels=$productionlist->keys();
-            $dates = $this->generateDates($start, $end); // you fill zero valued dates
-            $dates = $this->generateDates($start, $end); // you fill zero valued dates
-            $productiondates->merge($dates);
-            $labels=$productiondates;
-            $productionvalues=$productionlist->values();
-            return view('dashboard',compact('production','daysproduction','production_time','herd','users','labels','productionvalues'));
+             $productionlist=[];
+             $count=0;
+            foreach ($dates as $date){
+                foreach ($productionTime as $timeofday){
+                  //foreach( as $cow){
+                    
+                    $productionlist[]=[$count,$date,$timeofday];
+                    $count+=1;
+
+                }
+            }
+           // $productiondates->$dates->keys();
+           
+           // $productionvalues=$productionlist->values();
+            dd($herd);
+            return view('dashboard',compact('production','daysproduction','production_time','herdsize','users','labels','productionvalues'));
         }
   
         return redirect("login")->withSuccess('You are not allowed to access');
     }
     private function generateDates(Carbon $startDate, Carbon $endDate, $format = 'Y-m-d'){
-        $dates = collect();
+        $dates = [];
         $startDate = $startDate->copy();
-
+        $count=0;
             for ($date = $startDate; $date->lte($endDate); $date->addDay()) {
-                $dates->put($date->format($format), 1);
-                //$production=collect(DB::select('SELECT distinct tag FROM Production'));
-                $dates->put($date->format($format), 0);
+                $dates[$count]=$date->format($format);
+                $count+=1;
+                
             }
        return $dates;
     }
